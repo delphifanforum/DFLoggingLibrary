@@ -1,71 +1,66 @@
-unit DFLoggingLibrary;
+unit SimpleLoggingLibrary;
 
 interface
-
-uses
-  DFLogging;
 
 type
   TLogLevel = (llDebug, llInfo, llWarning, llError);
 
-  TDFLogger = class
-  private
-    FLogger: TLogger;
-  public
-    constructor Create(const ALogFileName: string = '');
-    destructor Destroy; override;
+  procedure InitializeLog(const ALogFileName: string = '');
+  procedure FinalizeLog;
 
-    procedure Log(const AMessage: string; ALogLevel: TLogLevel = llInfo);
-    procedure Debug(const AMessage: string);
-    procedure Info(const AMessage: string);
-    procedure Warning(const AMessage: string);
-    procedure Error(const AMessage: string);
-  end;
+  procedure Log(const AMessage: string; ALogLevel: TLogLevel = llInfo);
+  procedure Debug(const AMessage: string);
+  procedure Info(const AMessage: string);
+  procedure Warning(const AMessage: string);
+  procedure Error(const AMessage: string);
 
 implementation
 
-constructor TDFLogger.Create(const ALogFileName: string);
+var
+  LogFile: TextFile;
+  LogLevel: TLogLevel = llInfo;
+
+procedure InitializeLog(const ALogFileName: string);
 begin
-  inherited Create;
-  FLogger := TLogger.Create;
-  FLogger.LogFileName := ALogFileName;
-  // Additional configuration can be done here
+  AssignFile(LogFile, ALogFileName);
+  Rewrite(LogFile);
 end;
 
-destructor TDFLogger.Destroy;
+procedure FinalizeLog;
 begin
-  FLogger.Free;
-  inherited;
+  CloseFile(LogFile);
 end;
 
-procedure TDFLogger.Log(const AMessage: string; ALogLevel: TLogLevel);
+procedure Log(const AMessage: string; ALogLevel: TLogLevel);
 begin
-  case ALogLevel of
-    llDebug: Debug(AMessage);
-    llInfo: Info(AMessage);
-    llWarning: Warning(AMessage);
-    llError: Error(AMessage);
-  end;
+  if ALogLevel >= LogLevel then
+    Writeln(LogFile, AMessage);
 end;
 
-procedure TDFLogger.Debug(const AMessage: string);
+procedure Debug(const AMessage: string);
 begin
-  FLogger.Debug(AMessage);
+  Log(AMessage, llDebug);
 end;
 
-procedure TDFLogger.Info(const AMessage: string);
+procedure Info(const AMessage: string);
 begin
-  FLogger.Info(AMessage);
+  Log(AMessage, llInfo);
 end;
 
-procedure TDFLogger.Warning(const AMessage: string);
+procedure Warning(const AMessage: string);
 begin
-  FLogger.Warning(AMessage);
+  Log(AMessage, llWarning);
 end;
 
-procedure TDFLogger.Error(const AMessage: string);
+procedure Error(const AMessage: string);
 begin
-  FLogger.Error(AMessage);
+  Log(AMessage, llError);
 end;
+
+initialization
+  InitializeLog('app_log.txt'); // Default log file name
+
+finalization
+  FinalizeLog;
 
 end.
